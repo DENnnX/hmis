@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.edu.scnu.hmis.mapper.BedMapper">
+
+    <resultMap id="baseResultMap" type="cn.edu.scnu.hmis.entity.Bed">
+        <id column="id" property="id"/>
+        <result column="ward_id" property="wardId"/>
+        <result column="bed_no" property="bedNo"/>
+        <result column="status" property="status"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="baseResultMap">
+        SELECT id, ward_id, bed_no, status
+        FROM bed
+    </select>
+
+    <select id="findById" resultMap="baseResultMap">
+        SELECT id, ward_id, bed_no, status
+        FROM bed
+        WHERE id = #{id}
+    </select>
+
+    <select id="findAvailableByWardId" resultMap="baseResultMap">
+        SELECT id, ward_id, bed_no, status
+        FROM bed
+        WHERE ward_id = #{wardId} AND status = 'AVAILABLE'
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO bed (ward_id, bed_no, status)
+        VALUES (#{wardId}, #{bedNo}, #{status})
+    </insert>
+
+    <update id="update">
+        UPDATE bed
+        SET ward_id = #{wardId},
+            bed_no = #{bedNo},
+            status = #{status}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM bed WHERE id = #{id}
+    </delete>
+
+</mapper>

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.edu.scnu.hmis.mapper.ScheduleMapper">
+
+    <resultMap id="baseResultMap" type="cn.edu.scnu.hmis.entity.Schedule">
+        <id column="id" property="id"/>
+        <result column="doctor_id" property="doctorId"/>
+        <result column="schedule_date" property="scheduleDate"/>
+        <result column="time_slot" property="timeSlot"/>
+        <result column="schedule_type" property="scheduleType"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="baseResultMap">
+        SELECT id, doctor_id, schedule_date, time_slot, schedule_type
+        FROM schedule
+    </select>
+
+    <select id="findById" resultMap="baseResultMap">
+        SELECT id, doctor_id, schedule_date, time_slot, schedule_type
+        FROM schedule
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByDoctorAndDate" resultMap="baseResultMap">
+        SELECT id, doctor_id, schedule_date, time_slot, schedule_type
+        FROM schedule
+        WHERE doctor_id = #{doctorId} AND schedule_date = #{scheduleDate}
+    </select>
+
+    <select id="findByDate" resultMap="baseResultMap">
+        SELECT id, doctor_id, schedule_date, time_slot, schedule_type
+        FROM schedule
+        WHERE schedule_date = #{scheduleDate}
+    </select>
+
+    <select id="findDepartmentSchedule" resultType="java.util.Map">
+        SELECT * FROM v_department_schedule
+        WHERE schedule_date = #{date}
+    </select>
+
+    <select id="findFutureOutpatient" resultType="java.util.Map">
+        SELECT s.id AS schedule_id, s.doctor_id,
+               DATE_FORMAT(s.schedule_date, '%Y-%m-%d') AS schedule_date,
+               s.time_slot, s.schedule_type,
+               d.name AS doctor_name, d.title AS doctor_title, d.phone AS doctor_phone,
+               dep.name AS department_name, dep.id AS department_id
+        FROM schedule s
+        JOIN doctor d ON s.doctor_id = d.id
+        JOIN department dep ON d.department_id = dep.id
+        WHERE s.schedule_type = 'OUTPATIENT'
+          AND s.schedule_date >= CURDATE()
+        ORDER BY s.schedule_date, s.time_slot
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO schedule (doctor_id, schedule_date, time_slot, schedule_type)
+        VALUES (#{doctorId}, #{scheduleDate}, #{timeSlot}, #{scheduleType})
+    </insert>
+
+    <update id="update">
+        UPDATE schedule
+        SET doctor_id = #{doctorId},
+            schedule_date = #{scheduleDate},
+            time_slot = #{timeSlot},
+            schedule_type = #{scheduleType}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM schedule WHERE id = #{id}
+    </delete>
+
+</mapper>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.edu.scnu.hmis.mapper.DepositMapper">
+
+    <resultMap id="baseResultMap" type="cn.edu.scnu.hmis.entity.Deposit">
+        <id column="id" property="id"/>
+        <result column="hospitalization_id" property="hospitalizationId"/>
+        <result column="amount" property="amount"/>
+        <result column="deposit_time" property="depositTime"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="baseResultMap">
+        SELECT id, hospitalization_id, amount, deposit_time
+        FROM deposit
+    </select>
+
+    <select id="findById" resultMap="baseResultMap">
+        SELECT id, hospitalization_id, amount, deposit_time
+        FROM deposit
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByHospitalizationId" resultMap="baseResultMap">
+        SELECT id, hospitalization_id, amount, deposit_time
+        FROM deposit
+        WHERE hospitalization_id = #{hospitalizationId}
+        ORDER BY deposit_time
+    </select>
+
+    <select id="sumByHospitalizationId" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(amount), 0)
+        FROM deposit
+        WHERE hospitalization_id = #{hospitalizationId}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO deposit (hospitalization_id, amount, deposit_time)
+        VALUES (#{hospitalizationId}, #{amount}, #{depositTime})
+    </insert>
+
+</mapper>

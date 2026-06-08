@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.edu.scnu.hmis.mapper.PatientMapper">
+
+    <resultMap id="baseResultMap" type="cn.edu.scnu.hmis.entity.Patient">
+        <id column="id" property="id"/>
+        <result column="patient_no" property="patientNo"/>
+        <result column="name" property="name"/>
+        <result column="gender" property="gender"/>
+        <result column="birth_date" property="birthDate"/>
+        <result column="address" property="address"/>
+        <result column="phone" property="phone"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="baseResultMap">
+        SELECT id, patient_no, name, gender, birth_date, address, phone
+        FROM patient
+    </select>
+
+    <select id="findById" resultMap="baseResultMap">
+        SELECT id, patient_no, name, gender, birth_date, address, phone
+        FROM patient
+        WHERE id = #{id}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO patient (patient_no, name, gender, birth_date, address, phone)
+        VALUES (#{patientNo}, #{name}, #{gender}, #{birthDate}, #{address}, #{phone})
+    </insert>
+
+    <update id="update">
+        UPDATE patient
+        SET patient_no = #{patientNo},
+            name = #{name},
+            gender = #{gender},
+            birth_date = #{birthDate},
+            address = #{address},
+            phone = #{phone}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM patient WHERE id = #{id}
+    </delete>
+
+</mapper>

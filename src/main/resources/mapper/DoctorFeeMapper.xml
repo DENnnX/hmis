@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.edu.scnu.hmis.mapper.DoctorFeeMapper">
+
+    <resultMap id="baseResultMap" type="cn.edu.scnu.hmis.entity.DoctorFee">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="consultation_fee" property="consultationFee"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="baseResultMap">
+        SELECT id, title, consultation_fee
+        FROM doctor_fee
+    </select>
+
+    <select id="findById" resultMap="baseResultMap">
+        SELECT id, title, consultation_fee
+        FROM doctor_fee
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByTitle" resultMap="baseResultMap">
+        SELECT id, title, consultation_fee
+        FROM doctor_fee
+        WHERE title = #{title}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO doctor_fee (title, consultation_fee)
+        VALUES (#{title}, #{consultationFee})
+    </insert>
+
+    <update id="update">
+        UPDATE doctor_fee
+        SET title = #{title},
+            consultation_fee = #{consultationFee}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM doctor_fee WHERE id = #{id}
+    </delete>
+
+</mapper>

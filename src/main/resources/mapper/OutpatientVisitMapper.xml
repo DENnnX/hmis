@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.edu.scnu.hmis.mapper.OutpatientVisitMapper">
+
+    <resultMap id="baseResultMap" type="cn.edu.scnu.hmis.entity.OutpatientVisit">
+        <id column="id" property="id"/>
+        <result column="registration_id" property="registrationId"/>
+        <result column="doctor_id" property="doctorId"/>
+        <result column="patient_id" property="patientId"/>
+        <result column="visit_time" property="visitTime"/>
+        <result column="diagnosis" property="diagnosis"/>
+        <result column="symptoms" property="symptoms"/>
+        <result column="consultation_fee" property="consultationFee"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="baseResultMap">
+        SELECT id, registration_id, doctor_id, patient_id, visit_time,
+               diagnosis, symptoms, consultation_fee
+        FROM outpatient_visit
+    </select>
+
+    <select id="findById" resultMap="baseResultMap">
+        SELECT id, registration_id, doctor_id, patient_id, visit_time,
+               diagnosis, symptoms, consultation_fee
+        FROM outpatient_visit
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByRegistrationId" resultMap="baseResultMap">
+        SELECT id, registration_id, doctor_id, patient_id, visit_time,
+               diagnosis, symptoms, consultation_fee
+        FROM outpatient_visit
+        WHERE registration_id = #{registrationId}
+    </select>
+
+    <select id="findByPatientId" resultMap="baseResultMap">
+        SELECT id, registration_id, doctor_id, patient_id, visit_time,
+               diagnosis, symptoms, consultation_fee
+        FROM outpatient_visit
+        WHERE patient_id = #{patientId}
+        ORDER BY visit_time DESC
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO outpatient_visit (registration_id, doctor_id, patient_id,
+                                      visit_time, diagnosis, symptoms, consultation_fee)
+        VALUES (#{registrationId}, #{doctorId}, #{patientId},
+                #{visitTime}, #{diagnosis}, #{symptoms}, #{consultationFee})
+    </insert>
+
+</mapper>

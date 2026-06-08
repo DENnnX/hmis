@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.edu.scnu.hmis.mapper.UserMapper">
+
+    <resultMap id="baseResultMap" type="cn.edu.scnu.hmis.entity.User">
+        <id column="id" property="id"/>
+        <result column="username" property="username"/>
+        <result column="password" property="password"/>
+        <result column="role" property="role"/>
+        <result column="reference_id" property="referenceId"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="baseResultMap">
+        SELECT id, username, password, role, reference_id
+        FROM `user`
+    </select>
+
+    <select id="findById" resultMap="baseResultMap">
+        SELECT id, username, password, role, reference_id
+        FROM `user`
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByUsername" resultMap="baseResultMap">
+        SELECT id, username, password, role, reference_id
+        FROM `user`
+        WHERE username = #{username}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `user` (username, password, role, reference_id)
+        VALUES (#{username}, #{password}, #{role}, #{referenceId})
+    </insert>
+
+    <update id="update">
+        UPDATE `user`
+        SET username = #{username},
+            password = #{password},
+            role = #{role},
+            reference_id = #{referenceId}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM `user` WHERE id = #{id}
+    </delete>
+
+</mapper>

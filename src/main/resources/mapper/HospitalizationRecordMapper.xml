@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.edu.scnu.hmis.mapper.HospitalizationRecordMapper">
+
+    <resultMap id="baseResultMap" type="cn.edu.scnu.hmis.entity.HospitalizationRecord">
+        <id column="id" property="id"/>
+        <result column="hospitalization_id" property="hospitalizationId"/>
+        <result column="record_date" property="recordDate"/>
+        <result column="condition_desc" property="conditionDesc"/>
+        <result column="treatment_plan" property="treatmentPlan"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="baseResultMap">
+        SELECT id, hospitalization_id, record_date, condition_desc, treatment_plan
+        FROM hospitalization_record
+    </select>
+
+    <select id="findById" resultMap="baseResultMap">
+        SELECT id, hospitalization_id, record_date, condition_desc, treatment_plan
+        FROM hospitalization_record
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByHospitalizationId" resultMap="baseResultMap">
+        SELECT id, hospitalization_id, record_date, condition_desc, treatment_plan
+        FROM hospitalization_record
+        WHERE hospitalization_id = #{hospitalizationId}
+        ORDER BY record_date
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO hospitalization_record (hospitalization_id, record_date, condition_desc, treatment_plan)
+        VALUES (#{hospitalizationId}, #{recordDate}, #{conditionDesc}, #{treatmentPlan})
+    </insert>
+
+</mapper>

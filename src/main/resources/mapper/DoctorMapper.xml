@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.edu.scnu.hmis.mapper.DoctorMapper">
+
+    <resultMap id="baseResultMap" type="cn.edu.scnu.hmis.entity.Doctor">
+        <id column="id" property="id"/>
+        <result column="doctor_no" property="doctorNo"/>
+        <result column="name" property="name"/>
+        <result column="gender" property="gender"/>
+        <result column="title" property="title"/>
+        <result column="phone" property="phone"/>
+        <result column="department_id" property="departmentId"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="baseResultMap">
+        SELECT id, doctor_no, name, gender, title, phone, department_id
+        FROM doctor
+    </select>
+
+    <select id="findById" resultMap="baseResultMap">
+        SELECT id, doctor_no, name, gender, title, phone, department_id
+        FROM doctor
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByDepartmentId" resultMap="baseResultMap">
+        SELECT id, doctor_no, name, gender, title, phone, department_id
+        FROM doctor
+        WHERE department_id = #{departmentId}
+    </select>
+
+    <select id="findWorkload" resultType="java.util.Map">
+        SELECT * FROM v_doctor_workload
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO doctor (doctor_no, name, gender, title, phone, department_id)
+        VALUES (#{doctorNo}, #{name}, #{gender}, #{title}, #{phone}, #{departmentId})
+    </insert>
+
+    <update id="update">
+        UPDATE doctor
+        SET doctor_no = #{doctorNo},
+            name = #{name},
+            gender = #{gender},
+            title = #{title},
+            phone = #{phone},
+            department_id = #{departmentId}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM doctor WHERE id = #{id}
+    </delete>
+
+</mapper>

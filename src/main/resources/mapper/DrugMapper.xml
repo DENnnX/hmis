@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.edu.scnu.hmis.mapper.DrugMapper">
+
+    <resultMap id="baseResultMap" type="cn.edu.scnu.hmis.entity.Drug">
+        <id column="id" property="id"/>
+        <result column="drug_no" property="drugNo"/>
+        <result column="name" property="name"/>
+        <result column="specification" property="specification"/>
+        <result column="unit" property="unit"/>
+        <result column="unit_price" property="unitPrice"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="baseResultMap">
+        SELECT id, drug_no, name, specification, unit, unit_price
+        FROM drug
+    </select>
+
+    <select id="findById" resultMap="baseResultMap">
+        SELECT id, drug_no, name, specification, unit, unit_price
+        FROM drug
+        WHERE id = #{id}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO drug (drug_no, name, specification, unit, unit_price)
+        VALUES (#{drugNo}, #{name}, #{specification}, #{unit}, #{unitPrice})
+    </insert>
+
+    <update id="update">
+        UPDATE drug
+        SET drug_no = #{drugNo},
+            name = #{name},
+            specification = #{specification},
+            unit = #{unit},
+            unit_price = #{unitPrice}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM drug WHERE id = #{id}
+    </delete>
+
+</mapper>

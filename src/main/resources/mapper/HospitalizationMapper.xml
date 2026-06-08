@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.edu.scnu.hmis.mapper.HospitalizationMapper">
+
+    <resultMap id="baseResultMap" type="cn.edu.scnu.hmis.entity.Hospitalization">
+        <id column="id" property="id"/>
+        <result column="hospital_no" property="hospitalNo"/>
+        <result column="patient_id" property="patientId"/>
+        <result column="attending_doctor_id" property="attendingDoctorId"/>
+        <result column="ward_id" property="wardId"/>
+        <result column="bed_id" property="bedId"/>
+        <result column="admission_date" property="admissionDate"/>
+        <result column="discharge_date" property="dischargeDate"/>
+        <result column="status" property="status"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="baseResultMap">
+        SELECT id, hospital_no, patient_id, attending_doctor_id, ward_id, bed_id,
+               admission_date, discharge_date, status
+        FROM hospitalization
+    </select>
+
+    <select id="findById" resultMap="baseResultMap">
+        SELECT id, hospital_no, patient_id, attending_doctor_id, ward_id, bed_id,
+               admission_date, discharge_date, status
+        FROM hospitalization
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByPatientId" resultMap="baseResultMap">
+        SELECT id, hospital_no, patient_id, attending_doctor_id, ward_id, bed_id,
+               admission_date, discharge_date, status
+        FROM hospitalization
+        WHERE patient_id = #{patientId}
+        ORDER BY admission_date DESC
+    </select>
+
+    <select id="findActive" resultMap="baseResultMap">
+        SELECT id, hospital_no, patient_id, attending_doctor_id, ward_id, bed_id,
+               admission_date, discharge_date, status
+        FROM hospitalization
+        WHERE status = 'IN_HOSPITAL'
+    </select>
+
+    <select id="findByDoctorId" resultMap="baseResultMap">
+        SELECT id, hospital_no, patient_id, attending_doctor_id, ward_id, bed_id,
+               admission_date, discharge_date, status
+        FROM hospitalization
+        WHERE attending_doctor_id = #{doctorId}
+        ORDER BY admission_date DESC
+    </select>
+
+    <select id="findCostSummary" resultType="java.util.Map">
+        SELECT * FROM v_hospitalization_cost
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO hospitalization (hospital_no, patient_id, attending_doctor_id,
+                                     ward_id, bed_id, admission_date, discharge_date, status)
+        VALUES (#{hospitalNo}, #{patientId}, #{attendingDoctorId},
+                #{wardId}, #{bedId}, #{admissionDate}, #{dischargeDate}, #{status})
+    </insert>
+
+    <update id="update">
+        UPDATE hospitalization
+        SET hospital_no = #{hospitalNo},
+            patient_id = #{patientId},
+            attending_doctor_id = #{attendingDoctorId},
+            ward_id = #{wardId},
+            bed_id = #{bedId},
+            admission_date = #{admissionDate},
+            discharge_date = #{dischargeDate},
+            status = #{status}
+        WHERE id = #{id}
+    </update>
+
+</mapper>

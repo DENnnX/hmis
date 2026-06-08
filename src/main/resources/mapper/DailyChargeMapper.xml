@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.edu.scnu.hmis.mapper.DailyChargeMapper">
+
+    <resultMap id="baseResultMap" type="cn.edu.scnu.hmis.entity.DailyCharge">
+        <id column="id" property="id"/>
+        <result column="hospitalization_id" property="hospitalizationId"/>
+        <result column="charge_date" property="chargeDate"/>
+        <result column="bed_fee" property="bedFee"/>
+        <result column="drug_fee" property="drugFee"/>
+        <result column="treatment_fee" property="treatmentFee"/>
+        <result column="total_fee" property="totalFee"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="baseResultMap">
+        SELECT id, hospitalization_id, charge_date, bed_fee, drug_fee, treatment_fee, total_fee
+        FROM daily_charge
+    </select>
+
+    <select id="findById" resultMap="baseResultMap">
+        SELECT id, hospitalization_id, charge_date, bed_fee, drug_fee, treatment_fee, total_fee
+        FROM daily_charge
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByHospitalizationId" resultMap="baseResultMap">
+        SELECT id, hospitalization_id, charge_date, bed_fee, drug_fee, treatment_fee, total_fee
+        FROM daily_charge
+        WHERE hospitalization_id = #{hospitalizationId}
+        ORDER BY charge_date
+    </select>
+
+    <select id="sumByHospitalizationId" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(total_fee), 0)
+        FROM daily_charge
+        WHERE hospitalization_id = #{hospitalizationId}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO daily_charge (hospitalization_id, charge_date, bed_fee, drug_fee, treatment_fee, total_fee)
+        VALUES (#{hospitalizationId}, #{chargeDate}, #{bedFee}, #{drugFee}, #{treatmentFee}, #{totalFee})
+    </insert>
+
+</mapper>

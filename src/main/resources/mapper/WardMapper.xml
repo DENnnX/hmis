@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.edu.scnu.hmis.mapper.WardMapper">
+
+    <resultMap id="baseResultMap" type="cn.edu.scnu.hmis.entity.Ward">
+        <id column="id" property="id"/>
+        <result column="ward_no" property="wardNo"/>
+        <result column="location" property="location"/>
+        <result column="daily_fee" property="dailyFee"/>
+        <result column="department_id" property="departmentId"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="baseResultMap">
+        SELECT id, ward_no, location, daily_fee, department_id
+        FROM ward
+    </select>
+
+    <select id="findById" resultMap="baseResultMap">
+        SELECT id, ward_no, location, daily_fee, department_id
+        FROM ward
+        WHERE id = #{id}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ward (ward_no, location, daily_fee, department_id)
+        VALUES (#{wardNo}, #{location}, #{dailyFee}, #{departmentId})
+    </insert>
+
+    <update id="update">
+        UPDATE ward
+        SET ward_no = #{wardNo},
+            location = #{location},
+            daily_fee = #{dailyFee},
+            department_id = #{departmentId}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM ward WHERE id = #{id}
+    </delete>
+
+</mapper>
