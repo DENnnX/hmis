@@ -35,8 +35,13 @@
     </select>
 
     <select id="findDepartmentSchedule" resultType="java.util.Map">
-        SELECT * FROM v_department_schedule
+        SELECT department_name,
+               COUNT(*) AS total,
+               SUM(CASE WHEN schedule_type = 'OUTPATIENT' THEN 1 ELSE 0 END) AS outpatient_count,
+               SUM(CASE WHEN schedule_type = 'INPATIENT_ROUND' THEN 1 ELSE 0 END) AS inpatient_count
+        FROM v_department_schedule
         WHERE schedule_date = #{date}
+        GROUP BY department_name
     </select>
 
     <select id="findFutureOutpatient" resultType="java.util.Map">

@@ -27,4 +27,8 @@ public interface RegistrationMapper {
     int updateStatus(@Param("id") Long id, @Param("status") String status);
 
     List<Map<String, Object>> findPatientHistory(@Param("patientId") Long patientId);
+
+    List<Map<String, Object>> findPatientTreatmentSummary();
+
+    List<Map<String, Object>> findPatientTreatmentDetail(@Param("patientId") Long patientId);
 }

@@ -30,6 +30,15 @@
         WHERE prescription_id = #{prescriptionId}
     </select>
 
+    <select id="findByRecordId" resultType="java.util.Map">
+        SELECT ipi.id, ipi.quantity, ipi.dosage, ipi.unit_price, ipi.subtotal,
+               d.name AS drug_name, d.specification, d.unit
+        FROM inpatient_prescription_item ipi
+        JOIN inpatient_prescription ip ON ipi.prescription_id = ip.id
+        JOIN drug d ON ipi.drug_id = d.id
+        WHERE ip.record_id = #{recordId}
+    </select>
+
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO inpatient_prescription_item (prescription_id, drug_id, quantity, dosage, unit_price, subtotal)
         VALUES (#{prescriptionId}, #{drugId}, #{quantity}, #{dosage}, #{unitPrice}, #{subtotal})

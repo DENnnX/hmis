@@ -32,11 +32,14 @@ public class AdminController {
     private final AdminService adminService;
     private final ScheduleService scheduleService;
     private final StatisticsService statisticsService;
+    private final cn.edu.scnu.hmis.service.InpatientService inpatientService;
 
-    public AdminController(AdminService adminService, ScheduleService scheduleService, StatisticsService statisticsService) {
+    public AdminController(AdminService adminService, ScheduleService scheduleService,
+                           StatisticsService statisticsService, cn.edu.scnu.hmis.service.InpatientService inpatientService) {
         this.adminService = adminService;
         this.scheduleService = scheduleService;
         this.statisticsService = statisticsService;
+        this.inpatientService = inpatientService;
     }
 
     // ========== Department ==========
@@ -195,5 +198,20 @@ public class AdminController {
     @GetMapping("/statistics/hospitalization-cost")
     public ApiResponse<List<Map<String, Object>>> hospitalizationCost() {
         return ApiResponse.ok(statisticsService.hospitalizationCost());
+    }
+
+    @GetMapping("/statistics/patient-treatment")
+    public ApiResponse<List<Map<String, Object>>> patientTreatmentSummary() {
+        return ApiResponse.ok(statisticsService.patientTreatmentSummary());
+    }
+
+    @GetMapping("/statistics/patient-treatment/detail")
+    public ApiResponse<List<Map<String, Object>>> patientTreatmentDetail(@RequestParam Long patientId) {
+        return ApiResponse.ok(statisticsService.patientTreatmentDetail(patientId));
+    }
+
+    @GetMapping("/patient-hospitalizations")
+    public ApiResponse<List<cn.edu.scnu.hmis.entity.Hospitalization>> patientHospitalizations(@RequestParam Long patientId) {
+        return ApiResponse.ok(inpatientService.getHospitalizationsByPatient(patientId));
     }
 }

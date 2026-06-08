@@ -49,4 +49,16 @@
                 #{visitTime}, #{diagnosis}, #{symptoms}, #{consultationFee})
     </insert>
 
+    <select id="findVisitHistoryByDoctorId" resultType="java.util.Map">
+        SELECT ov.id, ov.visit_time, ov.diagnosis, ov.symptoms, ov.consultation_fee,
+               p.name AS patient_name, p.patient_no,
+               pr.id AS prescription_id, pr.total_drug_price,
+               (COALESCE(ov.consultation_fee, 0) + COALESCE(pr.total_drug_price, 0)) AS total_cost
+        FROM outpatient_visit ov
+        JOIN patient p ON ov.patient_id = p.id
+        LEFT JOIN prescription pr ON pr.visit_id = ov.id
+        WHERE ov.doctor_id = #{doctorId}
+        ORDER BY ov.visit_time DESC
+    </select>
+
 </mapper>

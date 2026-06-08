@@ -89,6 +89,16 @@ public class PatientController {
         return ApiResponse.ok(inpatientService.getBalance(hospitalizationId));
     }
 
+    @GetMapping("/prescription-detail")
+    public ApiResponse<List<Map<String, Object>>> prescriptionDetail(@RequestParam Long prescriptionId) {
+        return ApiResponse.ok(outpatientService.getPrescriptionDetailByPrescriptionId(prescriptionId));
+    }
+
+    @GetMapping("/hospitalization/prescription-items")
+    public ApiResponse<List<Map<String, Object>>> getRecordPrescriptionItems(@RequestParam Long recordId) {
+        return ApiResponse.ok(inpatientService.getPrescriptionItemsByRecordId(recordId));
+    }
+
     @GetMapping("/hospitalizations")
     public ApiResponse<List<Hospitalization>> getHospitalizations(@RequestParam Long patientId) {
         return ApiResponse.ok(inpatientService.getHospitalizationsByPatient(patientId));
@@ -114,7 +124,7 @@ public class PatientController {
     }
 
     @PostMapping("/hospitalization/discharge")
-    public ApiResponse<Integer> discharge(@RequestParam Long hospitalizationId) {
+    public ApiResponse<Map<String, Object>> discharge(@RequestParam Long hospitalizationId) {
         return ApiResponse.ok(inpatientService.discharge(hospitalizationId));
     }
 }

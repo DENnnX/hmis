@@ -56,11 +56,31 @@
             <template v-if="column.key === 'payMethod'">
               {{ payMethodMap[record.payMethod] || '-' }}
             </template>
+            <template v-if="column.key === 'action'">
+              <a-button v-if="record.type === 'DRUG'" type="link" size="small" @click="showDetail(record)">
+                查看清单
+              </a-button>
+            </template>
           </template>
         </a-table>
         <a-empty v-if="!allPayments.length" description="暂无缴费记录" />
       </a-tab-pane>
     </a-tabs>
+
+    <!-- 用药清单弹窗 -->
+    <a-modal v-model:open="modalVisible" title="用药清单" :footer="null" width="700px">
+      <a-spin :spinning="detailLoading">
+        <a-table
+          v-if="detailData.length"
+          :columns="detailColumns"
+          :data-source="detailData"
+          :pagination="false"
+          size="small"
+          row-key="drug_name"
+        />
+        <a-empty v-else description="无用药清单" />
+      </a-spin>
+    </a-modal>
   </div>
 </template>
 
@@ -68,10 +88,10 @@
 import { ref, onMounted } from 'vue'
 import { message } from 'ant-design-vue'
 import MoneyDisplay from '@/components/MoneyDisplay.vue'
-import { getPayments, getUnpaidPayments, pay } from '@/api/patient'
+import { getPayments, getUnpaidPayments, pay, getPrescriptionDetail } from '@/api/patient'
 import { getCurrentUser } from '@/utils/user'
 import { paymentTypeMap, paymentStatusMap, payMethodMap } from '@/utils/enums'
-import type { Payment } from '@/types'
+import type { Payment, DrugDetail } from '@/types'
 
 interface PayablePayment extends Payment {
   _payMethod?: string
@@ -83,6 +103,10 @@ const activeTab = ref('unpaid')
 
 const allPayments = ref<Payment[]>([])
 const unpaidPayments = ref<PayablePayment[]>([])
+
+const modalVisible = ref(false)
+const detailLoading = ref(false)
+const detailData = ref<DrugDetail[]>([])
 
 const unpaidColumns = [
   { title: 'ID', dataIndex: 'id', key: 'id' },
@@ -100,6 +124,16 @@ const historyColumns = [
   { title: '状态', dataIndex: 'status', key: 'status' },
   { title: '支付方式', dataIndex: 'payMethod', key: 'payMethod' },
   { title: '支付时间', dataIndex: 'payTime', key: 'payTime' },
+  { title: '操作', key: 'action', width: 100 },
+]
+
+const detailColumns = [
+  { title: '药品名称', dataIndex: 'drug_name', key: 'drug_name', width: 120 },
+  { title: '规格', dataIndex: 'specification', key: 'specification', width: 120 },
+  { title: '数量', dataIndex: 'quantity', key: 'quantity', width: 60 },
+  { title: '用法', dataIndex: 'dosage', key: 'dosage', ellipsis: true },
+  { title: '单价', dataIndex: 'unit_price', key: 'unit_price', width: 80 },
+  { title: '小计', dataIndex: 'subtotal', key: 'subtotal', width: 80 },
 ]
 
 async function loadData() {
@@ -113,6 +147,19 @@ async function loadData() {
     unpaidPayments.value = unpaid.map((p) => ({ ...p, _payMethod: 'WECHAT', _paying: false }))
   } catch {
     // handled by interceptor
+  }
+}
+
+async function showDetail(record: Payment) {
+  modalVisible.value = true
+  detailLoading.value = true
+  detailData.value = []
+  try {
+    detailData.value = await getPrescriptionDetail(record.referenceId)
+  } catch {
+    // handled by interceptor
+  } finally {
+    detailLoading.value = false
   }
 }
 

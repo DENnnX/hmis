@@ -39,4 +39,12 @@ public class StatisticsService {
     public List<Map<String, Object>> patientHistory(Long patientId) {
         return registrationMapper.findPatientHistory(patientId);
     }
+
+    public List<Map<String, Object>> patientTreatmentSummary() {
+        return registrationMapper.findPatientTreatmentSummary();
+    }
+
+    public List<Map<String, Object>> patientTreatmentDetail(Long patientId) {
+        return registrationMapper.findPatientTreatmentDetail(patientId);
+    }
 }

@@ -30,6 +30,14 @@
         WHERE prescription_id = #{prescriptionId}
     </select>
 
+    <select id="findDetailByPrescriptionId" resultType="java.util.Map">
+        SELECT pi.quantity, pi.dosage, pi.unit_price, pi.subtotal,
+               d.name AS drug_name, d.specification, d.unit
+        FROM prescription_item pi
+        JOIN drug d ON pi.drug_id = d.id
+        WHERE pi.prescription_id = #{prescriptionId}
+    </select>
+
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO prescription_item (prescription_id, drug_id, quantity, dosage, unit_price, subtotal)
         VALUES (#{prescriptionId}, #{drugId}, #{quantity}, #{dosage}, #{unitPrice}, #{subtotal})

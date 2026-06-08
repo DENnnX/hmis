@@ -1,7 +1,7 @@
 import request from './request'
 import type {
   Schedule, Registration, OutpatientVisit, Prescription, PrescriptionItem,
-  Hospitalization, HospitalizationRecord, InpatientPrescriptionItem,
+  Hospitalization, HospitalizationRecord, InpatientPrescriptionItem, DrugDetail,
 } from '@/types'
 
 export const getSchedule = (doctorId: number, date?: string) =>
@@ -24,3 +24,12 @@ export const dailyRound = (hospitalizationId: number, conditionDesc: string, tre
 
 export const getRecords = (hospitalizationId: number) =>
   request.get<any, HospitalizationRecord[]>('/patient/hospitalization/records', { params: { hospitalizationId } })
+
+export const getRecordPrescriptionItems = (recordId: number) =>
+  request.get<any, DrugDetail[]>('/doctor/hospitalization/prescription-items', { params: { recordId } })
+
+export const getVisitHistory = (doctorId: number) =>
+  request.get<any, any[]>('/doctor/visit-history', { params: { doctorId } })
+
+export const getPrescriptionDetail = (prescriptionId: number) =>
+  request.get<any, DrugDetail[]>('/patient/prescription-detail', { params: { prescriptionId } })

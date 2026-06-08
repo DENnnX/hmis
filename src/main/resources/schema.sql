@@ -208,7 +208,7 @@ CREATE TABLE IF NOT EXISTS `hospitalization_record` (
     condition_desc    TEXT   NOT NULL,
     treatment_plan    TEXT   NOT NULL,
     PRIMARY KEY (id),
-    UNIQUE KEY uk_hosp_record (hospitalization_id, record_date),
+    INDEX idx_hosp_record (hospitalization_id, record_date),
     CONSTRAINT fk_hosp_record_hospitalization FOREIGN KEY (hospitalization_id) REFERENCES `hospitalization`(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -244,7 +244,7 @@ CREATE TABLE IF NOT EXISTS `daily_charge` (
     treatment_fee     DECIMAL(10,2) NOT NULL DEFAULT 0,
     total_fee         DECIMAL(10,2) NOT NULL,
     PRIMARY KEY (id),
-    UNIQUE KEY uk_daily_charge (hospitalization_id, charge_date),
+    INDEX idx_daily_charge (hospitalization_id, charge_date),
     CONSTRAINT fk_daily_charge_hospitalization FOREIGN KEY (hospitalization_id) REFERENCES `hospitalization`(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

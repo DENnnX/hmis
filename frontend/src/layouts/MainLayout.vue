@@ -10,20 +10,21 @@
         <!-- 管理端 -->
         <template v-if="user.role === 'ADMIN'">
           <a-menu-item key="/admin"><template #icon><DashboardOutlined /></template>仪表盘</a-menu-item>
+          <a-menu-item key="/admin/schedules"><template #icon><CalendarOutlined /></template>排班管理</a-menu-item>
           <a-menu-item key="/admin/departments"><template #icon><BankOutlined /></template>科室管理</a-menu-item>
           <a-menu-item key="/admin/doctors"><template #icon><UserOutlined /></template>医生管理</a-menu-item>
+          <a-menu-item key="/admin/doctor-fees"><template #icon><MoneyCollectOutlined /></template>费用配置</a-menu-item>
           <a-menu-item key="/admin/patients"><template #icon><TeamOutlined /></template>病人管理</a-menu-item>
           <a-menu-item key="/admin/drugs"><template #icon><MedicineBoxOutlined /></template>药品管理</a-menu-item>
-          <a-menu-item key="/admin/doctor-fees"><template #icon><MoneyCollectOutlined /></template>费用配置</a-menu-item>
           <a-menu-item key="/admin/wards"><template #icon><HomeOutlined /></template>病房管理</a-menu-item>
           <a-menu-item key="/admin/beds"><template #icon><AppstoreOutlined /></template>床位管理</a-menu-item>
-          <a-menu-item key="/admin/schedules"><template #icon><CalendarOutlined /></template>排班管理</a-menu-item>
         </template>
         <!-- 医生端 -->
         <template v-if="user.role === 'DOCTOR'">
           <a-menu-item key="/doctor/schedule"><template #icon><CalendarOutlined /></template>我的排班</a-menu-item>
           <a-menu-item key="/doctor/visit"><template #icon><StethoscopeOutlined /></template>门诊就诊</a-menu-item>
           <a-menu-item key="/doctor/hospitalization"><template #icon><FileTextOutlined /></template>住院查房</a-menu-item>
+          <a-menu-item key="/doctor/visit-history"><template #icon><HistoryOutlined /></template>接诊历史</a-menu-item>
         </template>
         <!-- 患者端 -->
         <template v-if="user.role === 'PATIENT'">
@@ -74,7 +75,7 @@ import {
   MedicineBoxOutlined, MoneyCollectOutlined, HomeOutlined, AppstoreOutlined,
   CalendarOutlined, MenuFoldOutlined, MenuUnfoldOutlined,
   FormOutlined, WalletOutlined, ProfileOutlined, CreditCardOutlined,
-  FileTextOutlined,
+  FileTextOutlined, HistoryOutlined,
 } from '@ant-design/icons-vue'
 import type { LoginUser } from '@/types'
 
@@ -98,6 +99,7 @@ const titleMap: Record<string, string> = {
   '/admin/wards': '病房管理', '/admin/beds': '床位管理', '/admin/schedules': '排班管理',
   '/doctor/schedule': '我的排班', '/doctor/visit': '门诊就诊',
   '/doctor/hospitalization': '住院查房',
+  '/doctor/visit-history': '接诊历史',
   '/patient/register': '挂号', '/patient/payments': '缴费中心',
   '/patient/history': '就诊历史', '/patient/hospitalization': '住院服务',
 }

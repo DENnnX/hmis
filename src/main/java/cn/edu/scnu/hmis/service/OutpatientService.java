@@ -202,4 +202,12 @@ public class OutpatientService {
         }
         return registrationMapper.updateStatus(registrationId, "CANCELLED");
     }
+
+    public List<java.util.Map<String, Object>> getPrescriptionDetailByPrescriptionId(Long prescriptionId) {
+        return prescriptionItemMapper.findDetailByPrescriptionId(prescriptionId);
+    }
+
+    public List<java.util.Map<String, Object>> getVisitHistoryByDoctorId(Long doctorId) {
+        return outpatientVisitMapper.findVisitHistoryByDoctorId(doctorId);
+    }
 }

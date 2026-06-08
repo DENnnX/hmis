@@ -39,4 +39,7 @@ export const deleteSchedule = (id: number) => request.delete<any, number>(`/admi
 
 export const getWorkloadStats = () => request.get<any, WorkloadStat[]>('/admin/statistics/workload')
 export const getHospitalizationCostStats = () => request.get<any, HospitalizationCostStat[]>('/admin/statistics/hospitalization-cost')
-export const getScheduleStats = (date: string) => request.get<any, ScheduleStat[]>('/admin/statistics/schedule', { params: { date } })
+export const getScheduleStats = (date: string) => request.get<any, any[]>('/admin/statistics/schedule', { params: { date } })
+export const getPatientTreatmentStats = () => request.get<any, any[]>('/admin/statistics/patient-treatment')
+export const getPatientTreatmentDetail = (patientId: number) => request.get<any, any[]>('/admin/statistics/patient-treatment/detail', { params: { patientId } })
+export const getPatientHospitalizations = (patientId: number) => request.get<any, any[]>('/admin/patient-hospitalizations', { params: { patientId } })

@@ -49,3 +49,5 @@ export interface AvailableSchedule {
   department_name: string
   department_id: number
 }
+
+export interface DrugDetail { drug_name: string; specification: string; unit: string; quantity: number; dosage: string; unit_price: number; subtotal: number }

@@ -17,7 +17,7 @@ INSERT INTO department (name, location)
 VALUES ('内科', '1楼A区');
 
 INSERT INTO department (name, location)
-VALUES ('外科', '2楼B区');
+VALUES ('外科', '1楼B区');
 
 -- ============================================================
 -- 3. Doctors (one per title)
@@ -116,10 +116,10 @@ VALUES ('zhaoliu', '123456', 'PATIENT', 4);
 -- 9. Wards
 -- ============================================================
 INSERT INTO ward (ward_no, location, daily_fee, department_id)
-VALUES ('W101', '1楼A区', 80.00, 1);
+VALUES ('W201', '2楼A区', 80.00, 1);
 
 INSERT INTO ward (ward_no, location, daily_fee, department_id)
-VALUES ('W201', '2楼B区', 120.00, 2);
+VALUES ('W205', '2楼B区', 120.00, 2);
 
 -- ============================================================
 -- 10. Beds (2 per ward, status defaults to 'AVAILABLE')

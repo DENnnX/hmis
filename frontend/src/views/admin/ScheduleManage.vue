@@ -28,6 +28,12 @@
             <template v-if="column.key === 'doctorName'">
               <a-tag color="blue">{{ doctorNameMap[record.doctorId] || '-' }}</a-tag>
             </template>
+            <template v-if="column.key === 'department'">
+              {{ getDeptName(record.doctorId) }}
+            </template>
+            <template v-if="column.key === 'location'">
+              {{ record.scheduleType === 'INPATIENT_ROUND' ? getWardLocation(record.doctorId) : getDeptLocation(record.doctorId) }}
+            </template>
             <template v-if="column.key === 'timeSlot'">
               <a-tag :color="record.timeSlot === 'MORNING' ? 'orange' : 'purple'">
                 {{ timeSlotMap[record.timeSlot] || record.timeSlot }}
@@ -79,12 +85,14 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { PlusOutlined, CalendarOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import type { FormInstance } from 'ant-design-vue'
-import { listSchedules, listDoctors, addSchedule, deleteSchedule } from '@/api/admin'
+import { listSchedules, listDoctors, listDepartments, listWards, addSchedule, deleteSchedule } from '@/api/admin'
 import { timeSlotMap, scheduleTypeMap } from '@/utils/enums'
-import type { Schedule, Doctor } from '@/types'
+import type { Schedule, Doctor, Department, Ward } from '@/types'
 
 const list = ref<Schedule[]>([])
 const doctors = ref<Doctor[]>([])
+const departments = ref<Department[]>([])
+const wards = ref<Ward[]>([])
 const loading = ref(false)
 const visible = ref(false)
 const formRef = ref<FormInstance>()
@@ -101,12 +109,15 @@ const form = reactive({
 
 const columns = [
   { title: '医生', key: 'doctorName', width: 140 },
+  { title: '科室', key: 'department', width: 100 },
+  { title: '位置', key: 'location', width: 100 },
   { title: '时段', key: 'timeSlot', width: 100 },
   { title: '类型', key: 'scheduleType', width: 120 },
   { title: '操作', key: 'action', width: 80 },
 ]
 
 const doctorNameMap = computed(() => Object.fromEntries(doctors.value.map((d) => [d.id, d.name])))
+const deptMap = computed(() => Object.fromEntries(departments.value.map((d) => [d.id, d])))
 const doctorOptions = computed(() =>
   doctors.value.map((d) => ({ value: d.id!, label: `${d.name}（${d.doctorNo}）` })),
 )
@@ -134,17 +145,42 @@ function filterDoctor(input: string, option: { label: string }) {
   return option.label.toLowerCase().includes(input.toLowerCase())
 }
 
+function getDeptName(doctorId: number) {
+  const doc = doctors.value.find((d) => d.id === doctorId)
+  if (!doc) return '-'
+  const dept = departments.value.find((d) => d.id === doc.departmentId)
+  return dept?.name || '-'
+}
+
+function getDeptLocation(doctorId: number) {
+  const doc = doctors.value.find((d) => d.id === doctorId)
+  if (!doc) return '-'
+  const dept = departments.value.find((d) => d.id === doc.departmentId)
+  return dept?.location || '-'
+}
+
+function getWardLocation(doctorId: number) {
+  const doc = doctors.value.find((d) => d.id === doctorId)
+  if (!doc) return '-'
+  const ward = wards.value.find((w) => w.departmentId === doc.departmentId)
+  return ward?.location || '-'
+}
+
 async function load() {
   loading.value = true
   try {
-    const [s, d] = await Promise.all([
+    const [s, d, dep, w] = await Promise.all([
       filterDoctorId.value
         ? import('@/api/doctor').then((m) => m.getSchedule(filterDoctorId.value!, filterDate.value))
         : listSchedules(),
       listDoctors(),
+      listDepartments(),
+      listWards(),
     ])
     list.value = s
     doctors.value = d
+    departments.value = dep
+    wards.value = w
   } catch {
     // handled
   } finally {

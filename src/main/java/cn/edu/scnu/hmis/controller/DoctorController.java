@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/doctor")
@@ -76,5 +77,15 @@ public class DoctorController {
             @RequestParam String treatmentPlan,
             @RequestBody(required = false) List<InpatientPrescriptionItem> items) {
         return ApiResponse.ok(inpatientService.dailyRound(hospitalizationId, conditionDesc, treatmentPlan, items));
+    }
+
+    @GetMapping("/hospitalization/prescription-items")
+    public ApiResponse<List<Map<String, Object>>> getRecordPrescriptionItems(@RequestParam Long recordId) {
+        return ApiResponse.ok(inpatientService.getPrescriptionItemsByRecordId(recordId));
+    }
+
+    @GetMapping("/visit-history")
+    public ApiResponse<List<Map<String, Object>>> getVisitHistory(@RequestParam Long doctorId) {
+        return ApiResponse.ok(outpatientService.getVisitHistoryByDoctorId(doctorId));
     }
 }

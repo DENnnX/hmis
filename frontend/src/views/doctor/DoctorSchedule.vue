@@ -10,8 +10,9 @@
       </template>
       <template #extra>
         <a-space>
-          <a-date-picker v-model:value="filterDate" value-format="YYYY-MM-DD" placeholder="筛选日期" allow-clear @change="load" />
-          <a-button @click="load"><template #icon><ReloadOutlined /></template>刷新</a-button>
+          <a-date-picker v-model:value="filterDate" value-format="YYYY-MM-DD" placeholder="选择日期" allow-clear @change="onDateChange" />
+          <a-button @click="loadWeek"><template #icon><CalendarOutlined /></template>近7天</a-button>
+          <a-button @click="loadToday"><template #icon><ReloadOutlined /></template>今天</a-button>
         </a-space>
       </template>
 
@@ -54,6 +55,7 @@ import { listDoctors } from '@/api/admin'
 import { getCurrentUser } from '@/utils/user'
 import { timeSlotMap, scheduleTypeMap } from '@/utils/enums'
 import type { Schedule } from '@/types'
+import dayjs from 'dayjs'
 
 const user = getCurrentUser()
 const doctorId = user.referenceId!
@@ -63,7 +65,7 @@ const loading = ref(false)
 const filterDate = ref<string | undefined>()
 
 const weekdayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
-const todayStr = new Date().toISOString().substring(0, 10)
+const todayStr = dayjs().format('YYYY-MM-DD')
 
 const outpatientCount = computed(() => schedules.value.filter((s) => s.scheduleType === 'OUTPATIENT').length)
 const inpatientCount = computed(() => schedules.value.filter((s) => s.scheduleType === 'INPATIENT_ROUND').length)
@@ -91,13 +93,17 @@ const grouped = computed(() => {
     })
 })
 
-async function load() {
+async function loadDoctor() {
+  const doctors = await listDoctors()
+  const doc = doctors.find((d) => d.id === doctorId)
+  doctorName.value = doc ? `${doc.name}（${doc.title}）` : `医生 #${doctorId}`
+}
+
+async function loadToday() {
+  filterDate.value = undefined
   loading.value = true
   try {
-    const [s, doctors] = await Promise.all([getSchedule(doctorId, filterDate.value), listDoctors()])
-    schedules.value = s
-    const doc = doctors.find((d) => d.id === doctorId)
-    doctorName.value = doc ? `${doc.name}（${doc.title}）` : `医生 #${doctorId}`
+    schedules.value = await getSchedule(doctorId, todayStr)
   } catch {
     // handled
   } finally {
@@ -105,7 +111,43 @@ async function load() {
   }
 }
 
-onMounted(load)
+async function loadWeek() {
+  filterDate.value = undefined
+  loading.value = true
+  try {
+    const results: Schedule[] = []
+    for (let i = 0; i < 7; i++) {
+      const d = dayjs().add(i, 'day').format('YYYY-MM-DD')
+      const s = await getSchedule(doctorId, d)
+      results.push(...s)
+    }
+    schedules.value = results
+  } catch {
+    // handled
+  } finally {
+    loading.value = false
+  }
+}
+
+async function onDateChange() {
+  if (!filterDate.value) {
+    loadToday()
+    return
+  }
+  loading.value = true
+  try {
+    schedules.value = await getSchedule(doctorId, filterDate.value)
+  } catch {
+    // handled
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(async () => {
+  await loadDoctor()
+  loadToday()
+})
 </script>
 
 <style scoped>

@@ -60,8 +60,10 @@
         <!-- 查房记录 -->
         <a-divider>查房记录</a-divider>
         <a-table :data-source="records" :columns="recordColumns" :pagination="false" size="small" row-key="id" :loading="recordsLoading">
-          <template #bodyCell="{ column, record }">
-            <template v-if="column.key === 'recordDate'">{{ record.recordDate }}</template>
+          <template #bodyCell="{ column, record: rec }">
+            <template v-if="column.key === 'action'">
+              <a-button type="link" size="small" @click="showRecordDetail(rec)">查看清单</a-button>
+            </template>
           </template>
         </a-table>
         <a-empty v-if="!recordsLoading && records.length === 0" description="暂无查房记录" />
@@ -94,26 +96,58 @@
             <template v-if="column.key === 'doctor'">
               {{ doctorMap[record.attendingDoctorId] || `#${record.attendingDoctorId}` }}
             </template>
+            <template v-if="column.key === 'action'">
+              <a-button type="link" size="small" @click="loadPastRecords(record.id!)">
+                <template #icon><EyeOutlined /></template>查看记录
+              </a-button>
+            </template>
           </template>
         </a-table>
+
+        <!-- 展开的查房记录 -->
+        <a-card v-if="viewHospId" size="small" style="margin-top: 12px" title="查房记录">
+          <a-table :data-source="pastRecords" :columns="recordColumns" :pagination="false" size="small" row-key="id"
+            :loading="pastRecordsLoading" :locale="{ emptyText: '暂无查房记录' }">
+            <template #bodyCell="{ column, record: rec }">
+              <template v-if="column.key === 'action'">
+                <a-button type="link" size="small" @click="showRecordDetail(rec)">查看清单</a-button>
+              </template>
+            </template>
+          </a-table>
+        </a-card>
       </a-card>
     </a-spin>
+
+    <!-- 用药清单弹窗 -->
+    <a-modal v-model:open="detailModalVisible" title="用药清单" :footer="null" width="700px">
+      <a-spin :spinning="detailLoading">
+        <a-table
+          v-if="detailData.length"
+          :columns="prescriptionColumns"
+          :data-source="detailData"
+          :pagination="false"
+          size="small"
+          row-key="drug_name"
+        />
+        <a-empty v-else description="无用药清单" />
+      </a-spin>
+    </a-modal>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { message } from 'ant-design-vue'
-import { HomeOutlined, DollarOutlined, LogoutOutlined } from '@ant-design/icons-vue'
+import { HomeOutlined, DollarOutlined, LogoutOutlined, EyeOutlined } from '@ant-design/icons-vue'
 import BedSelector from '@/components/BedSelector.vue'
 import {
   getHospitalizations, getRecords, getBalance as fetchBalance,
-  admit, deposit, discharge,
+  admit, deposit, discharge, getRecordPrescriptionItems,
 } from '@/api/patient'
 import { listDoctors, listWards, listBeds, listPatients } from '@/api/admin'
 import { getCurrentUser } from '@/utils/user'
 import { titleMap } from '@/utils/enums'
-import type { Doctor, Ward, Bed, Patient, Hospitalization, HospitalizationRecord } from '@/types'
+import type { Doctor, Ward, Bed, Patient, Hospitalization, HospitalizationRecord, DrugDetail } from '@/types'
 
 const user = getCurrentUser()
 const patientId = user.referenceId!
@@ -160,13 +194,47 @@ const hospColumns = [
   { title: '入院日期', dataIndex: 'admissionDate' },
   { title: '出院日期', dataIndex: 'dischargeDate' },
   { title: '状态', key: 'status' },
+  { title: '操作', key: 'action', width: 100 },
 ]
+
+// 历史住院查房记录
+const viewHospId = ref<number | null>(null)
+const pastRecords = ref<HospitalizationRecord[]>([])
+const pastRecordsLoading = ref(false)
 
 const recordColumns = [
   { title: '日期', dataIndex: 'recordDate', width: 120 },
-  { title: '病情描述', dataIndex: 'conditionDesc' },
-  { title: '治疗方案', dataIndex: 'treatmentPlan' },
+  { title: '病情描述', dataIndex: 'conditionDesc', ellipsis: true },
+  { title: '治疗方案', dataIndex: 'treatmentPlan', ellipsis: true },
+  { title: '操作', key: 'action', width: 100 },
 ]
+
+// 用药清单弹窗
+const detailModalVisible = ref(false)
+const detailLoading = ref(false)
+const detailData = ref<DrugDetail[]>([])
+
+const prescriptionColumns = [
+  { title: '药品名称', dataIndex: 'drug_name', key: 'drug_name', width: 120 },
+  { title: '规格', dataIndex: 'specification', key: 'specification', width: 120 },
+  { title: '数量', dataIndex: 'quantity', key: 'quantity', width: 60 },
+  { title: '用法', dataIndex: 'dosage', key: 'dosage', ellipsis: true },
+  { title: '单价', dataIndex: 'unit_price', key: 'unit_price', width: 80 },
+  { title: '小计', dataIndex: 'subtotal', key: 'subtotal', width: 80 },
+]
+
+async function showRecordDetail(record: HospitalizationRecord) {
+  detailModalVisible.value = true
+  detailLoading.value = true
+  detailData.value = []
+  try {
+    detailData.value = await getRecordPrescriptionItems(record.id!)
+  } catch {
+    // handled
+  } finally {
+    detailLoading.value = false
+  }
+}
 
 // 加载数据
 async function loadAll() {
@@ -207,6 +275,18 @@ async function loadRecords() {
   recordsLoading.value = true
   try { records.value = await getRecords(activeHosp.value.id) } catch { /* handled */ }
   finally { recordsLoading.value = false }
+}
+
+async function loadPastRecords(hospId: number) {
+  if (viewHospId.value === hospId) {
+    viewHospId.value = null
+    pastRecords.value = []
+    return
+  }
+  viewHospId.value = hospId
+  pastRecordsLoading.value = true
+  try { pastRecords.value = await getRecords(hospId) } catch { /* handled */ }
+  finally { pastRecordsLoading.value = false }
 }
 
 // 入院
@@ -258,8 +338,15 @@ async function handleDeposit() {
 async function handleDischarge(id: number) {
   dischargingId.value = id
   try {
-    await discharge(id)
-    message.success('出院办理成功')
+    const result = await discharge(id)
+    const refund = Number(result.refund) || 0
+    if (refund > 0) {
+      message.success(`出院办理成功，核算后退还余额：¥${refund.toFixed(2)}`)
+    } else if (refund < 0) {
+      message.warning(`出院办理成功，账户欠费：¥${Math.abs(refund).toFixed(2)}`)
+    } else {
+      message.success('出院办理成功')
+    }
     await loadAll()
   } catch {
     // handled

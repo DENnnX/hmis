@@ -107,7 +107,7 @@ public class InpatientService {
             }
         }
 
-        // 1. Create HospitalizationRecord
+        // 1. Create HospitalizationRecord (allow multiple per day now)
         HospitalizationRecord record = new HospitalizationRecord();
         record.setHospitalizationId(hospitalizationId);
         record.setRecordDate(LocalDate.now());
@@ -118,51 +118,64 @@ public class InpatientService {
         // 2. If items not empty, create prescription
         BigDecimal drugFee = BigDecimal.ZERO;
         if (items != null && !items.isEmpty()) {
-            // a. Create InpatientPrescription
             InpatientPrescription prescription = new InpatientPrescription();
             prescription.setRecordId(record.getId());
             prescription.setTotalDrugPrice(BigDecimal.ZERO);
             inpatientPrescriptionMapper.insert(prescription);
 
-            // b. Insert each item (trigger auto-calculates)
             for (InpatientPrescriptionItem item : items) {
                 item.setPrescriptionId(prescription.getId());
                 inpatientPrescriptionItemMapper.insert(item);
             }
 
-            // c. Re-fetch prescription to get trigger-calculated totalDrugPrice
             InpatientPrescription updatedPrescription = inpatientPrescriptionMapper.findById(prescription.getId());
             drugFee = updatedPrescription.getTotalDrugPrice();
         }
 
-        // I9: Always create DailyCharge (bed fee + treatment fee, even without drugs)
-        Doctor doctor = doctorMapper.findById(hospitalization.getAttendingDoctorId());
-        if (doctor == null) {
-            throw new RuntimeException("Doctor not found: id=" + hospitalization.getAttendingDoctorId());
-        }
-        DoctorFee doctorFee = doctorFeeMapper.findByTitle(doctor.getTitle());
-        if (doctorFee == null) {
-            throw new RuntimeException("DoctorFee not found for title=" + doctor.getTitle());
-        }
-        Ward ward = wardMapper.findById(hospitalization.getWardId());
-        if (ward == null) {
-            throw new RuntimeException("Ward not found: id=" + hospitalization.getWardId());
+        // 3. Check if this is the first submission today
+        HospitalizationRecord existingToday = hospitalizationRecordMapper
+                .findByHospitalizationAndDate(hospitalizationId, LocalDate.now());
+        // existingToday is the record we just inserted (since we inserted before this check)
+        // Count records for today — if > 1, this is a subsequent submission
+        List<HospitalizationRecord> todayRecords = hospitalizationRecordMapper.findByHospitalizationId(hospitalizationId)
+                .stream().filter(r -> LocalDate.now().equals(r.getRecordDate())).toList();
+        boolean isFirstToday = todayRecords.size() <= 1;
+
+        // 4. Create DailyCharge: first submission = bed+treatment+drug, subsequent = drug only
+        BigDecimal bedFee = BigDecimal.ZERO;
+        BigDecimal treatmentFee = BigDecimal.ZERO;
+        if (isFirstToday) {
+            Doctor doctor = doctorMapper.findById(hospitalization.getAttendingDoctorId());
+            if (doctor == null) throw new RuntimeException("Doctor not found");
+            DoctorFee doctorFee = doctorFeeMapper.findByTitle(doctor.getTitle());
+            if (doctorFee == null) throw new RuntimeException("DoctorFee not found");
+            Ward ward = wardMapper.findById(hospitalization.getWardId());
+            if (ward == null) throw new RuntimeException("Ward not found");
+            bedFee = ward.getDailyFee();
+            treatmentFee = doctorFee.getConsultationFee();
         }
 
-        DailyCharge dailyCharge = new DailyCharge();
-        dailyCharge.setHospitalizationId(hospitalizationId);
-        dailyCharge.setChargeDate(LocalDate.now());
-        dailyCharge.setBedFee(ward.getDailyFee());
-        dailyCharge.setDrugFee(drugFee);
-        dailyCharge.setTreatmentFee(doctorFee.getConsultationFee());
-        dailyChargeMapper.insert(dailyCharge);
+        BigDecimal todayCost = bedFee.add(treatmentFee).add(drugFee);
+        if (todayCost.compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal currentBalance = getBalance(hospitalizationId);
+            if (currentBalance.compareTo(todayCost) < 0) {
+                throw new RuntimeException("患者账户余额不足，请及时通知患者补缴住院押金");
+            }
 
-        // 3. Return HospitalizationRecord
+            DailyCharge dailyCharge = new DailyCharge();
+            dailyCharge.setHospitalizationId(hospitalizationId);
+            dailyCharge.setChargeDate(LocalDate.now());
+            dailyCharge.setBedFee(bedFee);
+            dailyCharge.setDrugFee(drugFee);
+            dailyCharge.setTreatmentFee(treatmentFee);
+            dailyChargeMapper.insert(dailyCharge);
+        }
+
         return record;
     }
 
     @Transactional
-    public int discharge(Long hospitalizationId) {
+    public java.util.Map<String, Object> discharge(Long hospitalizationId) {
         // 1. Get Hospitalization
         Hospitalization hospitalization = hospitalizationMapper.findById(hospitalizationId);
         if (hospitalization == null) {
@@ -173,13 +186,20 @@ public class InpatientService {
             throw new RuntimeException("该住院记录已出院");
         }
 
-        // 2. Set dischargeDate=today, status=DISCHARGED
+        // 2.核算余额
+        BigDecimal refund = getBalance(hospitalizationId);
+
+        // 3. Set dischargeDate=today, status=DISCHARGED
         hospitalization.setDischargeDate(LocalDate.now());
         hospitalization.setStatus("DISCHARGED");
 
-        // 3. Update -> trigger auto-releases bed
-        // 4. Return update count
-        return hospitalizationMapper.update(hospitalization);
+        // 4. Update -> trigger auto-releases bed
+        int rows = hospitalizationMapper.update(hospitalization);
+
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        result.put("rows", rows);
+        result.put("refund", refund);
+        return result;
     }
 
     public BigDecimal getBalance(Long hospitalizationId) {
@@ -199,5 +219,9 @@ public class InpatientService {
 
     public List<Hospitalization> getHospitalizationsByDoctor(Long doctorId) {
         return hospitalizationMapper.findByDoctorId(doctorId);
+    }
+
+    public List<java.util.Map<String, Object>> getPrescriptionItemsByRecordId(Long recordId) {
+        return inpatientPrescriptionItemMapper.findByRecordId(recordId);
     }
 }

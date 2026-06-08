@@ -16,4 +16,7 @@ public interface HospitalizationRecordMapper {
     int insert(HospitalizationRecord hospitalizationRecord);
 
     List<HospitalizationRecord> findByHospitalizationId(@Param("hospitalizationId") Long hospitalizationId);
+
+    HospitalizationRecord findByHospitalizationAndDate(@Param("hospitalizationId") Long hospitalizationId,
+                                                       @Param("recordDate") java.time.LocalDate recordDate);
 }

@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface InpatientPrescriptionItemMapper {
@@ -16,4 +17,6 @@ public interface InpatientPrescriptionItemMapper {
     int insert(InpatientPrescriptionItem inpatientPrescriptionItem);
 
     List<InpatientPrescriptionItem> findByPrescriptionId(@Param("prescriptionId") Long prescriptionId);
+
+    List<Map<String, Object>> findByRecordId(@Param("recordId") Long recordId);
 }

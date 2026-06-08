@@ -49,6 +49,36 @@
         WHERE patient_no = (SELECT patient_no FROM patient WHERE id = #{patientId})
     </select>
 
+    <select id="findPatientTreatmentSummary" resultType="java.util.Map">
+        SELECT p.id AS patient_id, p.patient_no, p.name AS patient_name,
+               COUNT(DISTINCT r.id) AS registration_count,
+               COUNT(DISTINCT ov.id) AS visit_count,
+               COUNT(DISTINCT h.id) AS hospitalization_count,
+               COALESCE(SUM(ov.consultation_fee), 0) AS total_consultation_fee,
+               COALESCE(SUM(pr.total_drug_price), 0) AS total_drug_fee,
+               COALESCE(SUM(ov.consultation_fee), 0) + COALESCE(SUM(pr.total_drug_price), 0) AS total_cost
+        FROM patient p
+        LEFT JOIN registration r ON r.patient_id = p.id
+        LEFT JOIN outpatient_visit ov ON ov.registration_id = r.id
+        LEFT JOIN prescription pr ON pr.visit_id = ov.id
+        LEFT JOIN hospitalization h ON h.patient_id = p.id
+        GROUP BY p.id, p.patient_no, p.name
+        HAVING registration_count > 0 OR hospitalization_count > 0
+        ORDER BY total_cost DESC
+    </select>
+
+    <select id="findPatientTreatmentDetail" resultType="java.util.Map">
+        SELECT ov.visit_time, ov.diagnosis, ov.symptoms, ov.consultation_fee,
+               doc.name AS doctor_name, doc.title AS doctor_title,
+               pr.total_drug_price,
+               (COALESCE(ov.consultation_fee, 0) + COALESCE(pr.total_drug_price, 0)) AS total_cost
+        FROM outpatient_visit ov
+        JOIN doctor doc ON ov.doctor_id = doc.id
+        LEFT JOIN prescription pr ON pr.visit_id = ov.id
+        WHERE ov.patient_id = #{patientId}
+        ORDER BY ov.visit_time DESC
+    </select>
+
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO registration (patient_id, doctor_id, registration_date, time_slot, visit_type, status)
         VALUES (#{patientId}, #{doctorId}, #{registrationDate}, #{timeSlot}, #{visitType}, #{status})

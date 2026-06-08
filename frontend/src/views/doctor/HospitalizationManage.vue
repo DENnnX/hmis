@@ -91,6 +91,11 @@
 
       <a-table :data-source="records" :columns="recordColumns" :pagination="false" size="small" row-key="id" :loading="recordsLoading"
         :locale="{ emptyText: '暂无查房记录' }">
+        <template #bodyCell="{ column, record: rec }">
+          <template v-if="column.key === 'action'">
+            <a-button type="link" size="small" @click="showRecordDetail(rec)">查看清单</a-button>
+          </template>
+        </template>
       </a-table>
     </a-card>
 
@@ -126,24 +131,44 @@
       <a-divider>历史查房记录</a-divider>
       <a-table :data-source="records" :columns="recordColumns" :pagination="false" size="small" row-key="id" :loading="recordsLoading"
         :locale="{ emptyText: '暂无查房记录' }">
+        <template #bodyCell="{ column, record: rec }">
+          <template v-if="column.key === 'action'">
+            <a-button type="link" size="small" @click="showRecordDetail(rec)">查看清单</a-button>
+          </template>
+        </template>
       </a-table>
     </a-card>
+
+    <!-- 用药清单弹窗 -->
+    <a-modal v-model:open="detailModalVisible" title="用药清单" :footer="null" width="700px">
+      <a-spin :spinning="detailLoading">
+        <a-table
+          v-if="detailData.length"
+          :columns="prescriptionColumns"
+          :data-source="detailData"
+          :pagination="false"
+          size="small"
+          row-key="drug_name"
+        />
+        <a-empty v-else description="无用药清单" />
+      </a-spin>
+    </a-modal>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { message } from 'ant-design-vue'
+import { message, Modal } from 'ant-design-vue'
 import {
   FileTextOutlined, ReloadOutlined, UserOutlined,
   EditOutlined, EyeOutlined, SearchOutlined,
 } from '@ant-design/icons-vue'
 import DrugPicker from '@/components/DrugPicker.vue'
-import { getHospitalizations, dailyRound, getRecords } from '@/api/doctor'
+import { getHospitalizations, dailyRound, getRecords, getRecordPrescriptionItems } from '@/api/doctor'
 import { listPatients, listDoctors, listWards, listBeds } from '@/api/admin'
 import { getCurrentUser } from '@/utils/user'
 import { hospitalizationStatusMap } from '@/utils/enums'
-import type { Hospitalization, HospitalizationRecord, Patient, Ward, Bed, DrugItem } from '@/types'
+import type { Hospitalization, HospitalizationRecord, Patient, Ward, Bed, DrugItem, DrugDetail } from '@/types'
 
 const user = getCurrentUser()
 const doctorId = user.referenceId!
@@ -169,6 +194,11 @@ const statusOptions = [
 const viewingHosp = ref<Hospitalization | null>(null)
 const records = ref<HospitalizationRecord[]>([])
 const recordsLoading = ref(false)
+
+// 用药清单弹窗
+const detailModalVisible = ref(false)
+const detailLoading = ref(false)
+const detailData = ref<DrugDetail[]>([])
 
 // 写查房
 const roundHosp = ref<Hospitalization | null>(null)
@@ -211,9 +241,32 @@ const hospColumns = [
 
 const recordColumns = [
   { title: '日期', dataIndex: 'recordDate', width: 120 },
-  { title: '病情描述', dataIndex: 'conditionDesc' },
-  { title: '治疗方案', dataIndex: 'treatmentPlan' },
+  { title: '病情描述', dataIndex: 'conditionDesc', ellipsis: true },
+  { title: '治疗方案', dataIndex: 'treatmentPlan', ellipsis: true },
+  { title: '操作', key: 'action', width: 100 },
 ]
+
+const prescriptionColumns = [
+  { title: '药品名称', dataIndex: 'drug_name', key: 'drug_name', width: 120 },
+  { title: '规格', dataIndex: 'specification', key: 'specification', width: 120 },
+  { title: '数量', dataIndex: 'quantity', key: 'quantity', width: 60 },
+  { title: '用法', dataIndex: 'dosage', key: 'dosage', ellipsis: true },
+  { title: '单价', dataIndex: 'unit_price', key: 'unit_price', width: 80 },
+  { title: '小计', dataIndex: 'subtotal', key: 'subtotal', width: 80 },
+]
+
+async function showRecordDetail(record: HospitalizationRecord) {
+  detailModalVisible.value = true
+  detailLoading.value = true
+  detailData.value = []
+  try {
+    detailData.value = await getRecordPrescriptionItems(record.id!)
+  } catch {
+    // handled
+  } finally {
+    detailLoading.value = false
+  }
+}
 
 async function loadData() {
   loading.value = true
@@ -265,9 +318,9 @@ async function loadRecords(hospId: number) {
   }
 }
 
-async function handleSubmit() {
-  if (!formRef.value) return
-  await formRef.value.validate()
+const todayStr = new Date().toISOString().substring(0, 10)
+
+async function doSubmit() {
   submitting.value = true
   try {
     await dailyRound(
@@ -284,6 +337,25 @@ async function handleSubmit() {
     // handled
   } finally {
     submitting.value = false
+  }
+}
+
+async function handleSubmit() {
+  if (!formRef.value) return
+  await formRef.value.validate()
+
+  // Check if there's already a record for today
+  const hasToday = records.value.some((r) => r.recordDate === todayStr)
+  if (hasToday) {
+    Modal.confirm({
+      title: '当天已有查房记录',
+      content: '当天已有查房记录，是否确认继续提交？',
+      okText: '确认提交',
+      cancelText: '取消',
+      onOk: () => doSubmit(),
+    })
+  } else {
+    await doSubmit()
   }
 }
 

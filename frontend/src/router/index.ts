@@ -12,7 +12,15 @@ const router = createRouter({
         else next()
       },
       children: [
-        { path: '', redirect: '/admin' },
+        { path: '', redirect: () => {
+          const raw = sessionStorage.getItem('user')
+          if (raw) {
+            const user = JSON.parse(raw)
+            if (user.role === 'DOCTOR') return '/doctor/schedule'
+            if (user.role === 'PATIENT') return '/patient/register'
+          }
+          return '/admin'
+        }},
         // 管理端
         { path: 'admin', name: 'Dashboard', component: () => import('@/views/admin/Dashboard.vue') },
         { path: 'admin/departments', name: 'Departments', component: () => import('@/views/admin/DepartmentManage.vue') },
@@ -27,6 +35,7 @@ const router = createRouter({
         { path: 'doctor/schedule', name: 'DoctorSchedule', component: () => import('@/views/doctor/DoctorSchedule.vue') },
         { path: 'doctor/visit', name: 'OutpatientVisit', component: () => import('@/views/doctor/OutpatientVisit.vue') },
         { path: 'doctor/hospitalization', name: 'HospitalizationManage', component: () => import('@/views/doctor/HospitalizationManage.vue') },
+        { path: 'doctor/visit-history', name: 'DoctorVisitHistory', component: () => import('@/views/doctor/DoctorVisitHistory.vue') },
         // 患者端
         { path: 'patient/register', name: 'PatientRegister', component: () => import('@/views/patient/PatientRegister.vue') },
         { path: 'patient/payments', name: 'PaymentCenter', component: () => import('@/views/patient/PaymentCenter.vue') },

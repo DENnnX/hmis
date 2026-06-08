@@ -1,5 +1,5 @@
 import request from './request'
-import type { Registration, Payment, PatientHistory, Hospitalization, HospitalizationRecord, Deposit, AvailableSchedule } from '@/types'
+import type { Registration, Payment, PatientHistory, Hospitalization, HospitalizationRecord, Deposit, AvailableSchedule, DrugDetail } from '@/types'
 
 export const getRegistrations = (patientId: number) =>
   request.get<any, Registration[]>('/patient/registrations', { params: { patientId } })
@@ -41,4 +41,10 @@ export const deposit = (hospitalizationId: number, amount: number) =>
   request.post<any, Deposit>('/patient/hospitalization/deposit', null, { params: { hospitalizationId, amount } })
 
 export const discharge = (hospitalizationId: number) =>
-  request.post<any, number>('/patient/hospitalization/discharge', null, { params: { hospitalizationId } })
+  request.post<any, { rows: number; refund: number }>('/patient/hospitalization/discharge', null, { params: { hospitalizationId } })
+
+export const getPrescriptionDetail = (prescriptionId: number) =>
+  request.get<any, DrugDetail[]>('/patient/prescription-detail', { params: { prescriptionId } })
+
+export const getRecordPrescriptionItems = (recordId: number) =>
+  request.get<any, DrugDetail[]>('/patient/hospitalization/prescription-items', { params: { recordId } })

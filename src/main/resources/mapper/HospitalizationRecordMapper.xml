@@ -34,4 +34,11 @@
         VALUES (#{hospitalizationId}, #{recordDate}, #{conditionDesc}, #{treatmentPlan})
     </insert>
 
+    <select id="findByHospitalizationAndDate" resultMap="baseResultMap">
+        SELECT id, hospitalization_id, record_date, condition_desc, treatment_plan
+        FROM hospitalization_record
+        WHERE hospitalization_id = #{hospitalizationId} AND record_date = #{recordDate}
+        LIMIT 1
+    </select>
+
 </mapper>
