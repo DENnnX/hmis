@@ -41,7 +41,7 @@
         SELECT id, patient_id, doctor_id, registration_date, time_slot, visit_type, status
         FROM registration
         WHERE doctor_id = #{doctorId}
-        ORDER BY registration_date DESC, time_slot
+        ORDER BY registration_date DESC, FIELD(time_slot, 'MORNING', 'AFTERNOON', 'EVENING')
     </select>
 
     <select id="findPatientHistory" resultType="java.util.Map">

@@ -13,10 +13,11 @@ CREATE TABLE IF NOT EXISTS `user` (
     id          BIGINT       NOT NULL AUTO_INCREMENT,
     username    VARCHAR(50)  NOT NULL,
     password    VARCHAR(255) NOT NULL,
-    role        ENUM('ADMIN','DOCTOR','PATIENT') NOT NULL,
+    role        VARCHAR(20)  NOT NULL,
     reference_id BIGINT     NULL,
     PRIMARY KEY (id),
-    UNIQUE KEY uk_user_username (username)
+    UNIQUE KEY uk_user_username (username),
+    CONSTRAINT chk_user_role CHECK (role IN ('ADMIN','DOCTOR','PATIENT'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `department` (
@@ -31,25 +32,28 @@ CREATE TABLE IF NOT EXISTS `doctor` (
     id            BIGINT      NOT NULL AUTO_INCREMENT,
     doctor_no     VARCHAR(20) NOT NULL,
     name          VARCHAR(50) NOT NULL,
-    gender        ENUM('M','F') NOT NULL,
-    title         ENUM('RESIDENT','ATTENDING','VICE_CHIEF','CHIEF') NOT NULL,
+    gender        VARCHAR(20) NOT NULL,
+    title         VARCHAR(20) NOT NULL,
     phone         VARCHAR(20) NULL,
     department_id BIGINT      NOT NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uk_doctor_no (doctor_no),
-    CONSTRAINT fk_doctor_department FOREIGN KEY (department_id) REFERENCES `department`(id)
+    CONSTRAINT fk_doctor_department FOREIGN KEY (department_id) REFERENCES `department`(id),
+    CONSTRAINT chk_doctor_gender CHECK (gender IN ('M','F')),
+    CONSTRAINT chk_doctor_title CHECK (title IN ('RESIDENT','ATTENDING','VICE_CHIEF','CHIEF'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `patient` (
     id         BIGINT       NOT NULL AUTO_INCREMENT,
     patient_no VARCHAR(20)  NOT NULL,
     name       VARCHAR(50)  NOT NULL,
-    gender     ENUM('M','F') NOT NULL,
+    gender     VARCHAR(20)  NOT NULL,
     birth_date DATE         NULL,
     address    VARCHAR(200) NULL,
     phone      VARCHAR(20)  NULL,
     PRIMARY KEY (id),
-    UNIQUE KEY uk_patient_no (patient_no)
+    UNIQUE KEY uk_patient_no (patient_no),
+    CONSTRAINT chk_patient_gender CHECK (gender IN ('M','F'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `drug` (
@@ -66,11 +70,12 @@ CREATE TABLE IF NOT EXISTS `drug` (
 
 CREATE TABLE IF NOT EXISTS `doctor_fee` (
     id               BIGINT        NOT NULL AUTO_INCREMENT,
-    title            ENUM('RESIDENT','ATTENDING','VICE_CHIEF','CHIEF') NOT NULL,
+    title            VARCHAR(20)  NOT NULL,
     consultation_fee DECIMAL(10,2) NOT NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uk_doctor_fee_title (title),
-    CONSTRAINT chk_consultation_fee CHECK (consultation_fee >= 0)
+    CONSTRAINT chk_consultation_fee CHECK (consultation_fee >= 0),
+    CONSTRAINT chk_doctor_fee_title CHECK (title IN ('RESIDENT','ATTENDING','VICE_CHIEF','CHIEF'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================================
@@ -93,10 +98,11 @@ CREATE TABLE IF NOT EXISTS `bed` (
     id      BIGINT                    NOT NULL AUTO_INCREMENT,
     ward_id BIGINT                    NOT NULL,
     bed_no  VARCHAR(10)               NOT NULL,
-    status  ENUM('AVAILABLE','OCCUPIED') DEFAULT 'AVAILABLE',
+    status  VARCHAR(20) DEFAULT 'AVAILABLE',
     PRIMARY KEY (id),
     UNIQUE KEY uk_ward_bed (ward_id, bed_no),
-    CONSTRAINT fk_bed_ward FOREIGN KEY (ward_id) REFERENCES `ward`(id)
+    CONSTRAINT fk_bed_ward FOREIGN KEY (ward_id) REFERENCES `ward`(id),
+    CONSTRAINT chk_bed_status CHECK (status IN ('AVAILABLE','OCCUPIED'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================================
@@ -107,11 +113,13 @@ CREATE TABLE IF NOT EXISTS `schedule` (
     id            BIGINT NOT NULL AUTO_INCREMENT,
     doctor_id     BIGINT NOT NULL,
     schedule_date DATE   NOT NULL,
-    time_slot     ENUM('MORNING','AFTERNOON','EVENING') NOT NULL,
-    schedule_type ENUM('OUTPATIENT','INPATIENT_ROUND') NOT NULL,
+    time_slot     VARCHAR(20) NOT NULL,
+    schedule_type VARCHAR(20) NOT NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uk_schedule (doctor_id, schedule_date, time_slot),
-    CONSTRAINT fk_schedule_doctor FOREIGN KEY (doctor_id) REFERENCES `doctor`(id)
+    CONSTRAINT fk_schedule_doctor FOREIGN KEY (doctor_id) REFERENCES `doctor`(id),
+    CONSTRAINT chk_schedule_time_slot CHECK (time_slot IN ('MORNING','AFTERNOON','EVENING')),
+    CONSTRAINT chk_schedule_type CHECK (schedule_type IN ('OUTPATIENT','INPATIENT_ROUND'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `registration` (
@@ -119,12 +127,15 @@ CREATE TABLE IF NOT EXISTS `registration` (
     patient_id       BIGINT        NOT NULL,
     doctor_id        BIGINT        NOT NULL,
     registration_date DATE         NOT NULL,
-    time_slot        ENUM('MORNING','AFTERNOON','EVENING') NOT NULL,
-    visit_type       ENUM('FIRST_VISIT','REVISIT') NOT NULL DEFAULT 'FIRST_VISIT',
-    status           ENUM('PENDING_PAYMENT','WAITING','VISITED','CANCELLED') DEFAULT 'PENDING_PAYMENT',
+    time_slot        VARCHAR(20) NOT NULL,
+    visit_type       VARCHAR(20) NOT NULL DEFAULT 'FIRST_VISIT',
+    status           VARCHAR(20) DEFAULT 'PENDING_PAYMENT',
     PRIMARY KEY (id),
     CONSTRAINT fk_registration_patient FOREIGN KEY (patient_id) REFERENCES `patient`(id),
-    CONSTRAINT fk_registration_doctor  FOREIGN KEY (doctor_id)  REFERENCES `doctor`(id)
+    CONSTRAINT fk_registration_doctor  FOREIGN KEY (doctor_id)  REFERENCES `doctor`(id),
+    CONSTRAINT chk_registration_time_slot CHECK (time_slot IN ('MORNING','AFTERNOON','EVENING')),
+    CONSTRAINT chk_registration_visit_type CHECK (visit_type IN ('FIRST_VISIT','REVISIT')),
+    CONSTRAINT chk_registration_status CHECK (status IN ('PENDING_PAYMENT','WAITING','VISITED','CANCELLED'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `outpatient_visit` (
@@ -169,14 +180,17 @@ CREATE TABLE IF NOT EXISTS `prescription_item` (
 CREATE TABLE IF NOT EXISTS `payment` (
     id           BIGINT        NOT NULL AUTO_INCREMENT,
     patient_id   BIGINT        NOT NULL,
-    type         ENUM('REGISTRATION','CONSULTATION','DRUG') NOT NULL,
+    type         VARCHAR(20)  NOT NULL,
     reference_id BIGINT        NOT NULL,
     amount       DECIMAL(10,2) NOT NULL,
-    status       ENUM('UNPAID','PAID') DEFAULT 'UNPAID',
+    status       VARCHAR(20)  DEFAULT 'UNPAID',
     pay_time     DATETIME      NULL,
-    pay_method   ENUM('ALIPAY','WECHAT','CARD') NULL,
+    pay_method   VARCHAR(20)  NULL,
     PRIMARY KEY (id),
-    CONSTRAINT fk_payment_patient FOREIGN KEY (patient_id) REFERENCES `patient`(id)
+    CONSTRAINT fk_payment_patient FOREIGN KEY (patient_id) REFERENCES `patient`(id),
+    CONSTRAINT chk_payment_type CHECK (type IN ('REGISTRATION','CONSULTATION','DRUG')),
+    CONSTRAINT chk_payment_status CHECK (status IN ('UNPAID','PAID')),
+    CONSTRAINT chk_payment_pay_method CHECK (pay_method IN ('ALIPAY','WECHAT','CARD'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================================
@@ -192,13 +206,14 @@ CREATE TABLE IF NOT EXISTS `hospitalization` (
     bed_id             BIGINT       NOT NULL,
     admission_date     DATE         NOT NULL,
     discharge_date     DATE         NULL,
-    status             ENUM('IN_HOSPITAL','DISCHARGED') DEFAULT 'IN_HOSPITAL',
+    status             VARCHAR(20) DEFAULT 'IN_HOSPITAL',
     PRIMARY KEY (id),
     UNIQUE KEY uk_hospitalization_no (hospital_no),
     CONSTRAINT fk_hospitalization_patient FOREIGN KEY (patient_id)          REFERENCES `patient`(id),
     CONSTRAINT fk_hospitalization_doctor  FOREIGN KEY (attending_doctor_id) REFERENCES `doctor`(id),
     CONSTRAINT fk_hospitalization_ward    FOREIGN KEY (ward_id)             REFERENCES `ward`(id),
-    CONSTRAINT fk_hospitalization_bed     FOREIGN KEY (bed_id)              REFERENCES `bed`(id)
+    CONSTRAINT fk_hospitalization_bed     FOREIGN KEY (bed_id)              REFERENCES `bed`(id),
+    CONSTRAINT chk_hospitalization_status CHECK (status IN ('IN_HOSPITAL','DISCHARGED'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `hospitalization_record` (
