@@ -55,7 +55,7 @@
         JOIN department dep ON d.department_id = dep.id
         WHERE s.schedule_type = 'OUTPATIENT'
           AND s.schedule_date >= CURDATE()
-        ORDER BY s.schedule_date, s.time_slot
+        ORDER BY s.schedule_date, FIELD(s.time_slot, 'MORNING', 'AFTERNOON', 'EVENING')
     </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">

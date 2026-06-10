@@ -109,7 +109,7 @@
 | id | BIGINT | PK, AUTO_INCREMENT | 用户ID |
 | username | VARCHAR(50) | UNIQUE, NOT NULL | 登录名 |
 | password | VARCHAR(255) | NOT NULL | 密码 |
-| role | ENUM('ADMIN','DOCTOR','PATIENT') | NOT NULL | 角色 |
+| role | VARCHAR(20) | NOT NULL | 角色 |
 | reference_id | BIGINT | NULLABLE | 关联医生ID或病人ID |
 
 #### Department（科室表）
@@ -127,8 +127,8 @@
 | id | BIGINT | PK, AUTO_INCREMENT | 医生ID |
 | doctor_no | VARCHAR(20) | UNIQUE, NOT NULL | 工号 |
 | name | VARCHAR(50) | NOT NULL | 姓名 |
-| gender | ENUM('M','F') | NOT NULL | 性别 |
-| title | ENUM('RESIDENT','ATTENDING','VICE_CHIEF','CHIEF') | NOT NULL | 职称 |
+| gender | VARCHAR(20) | NOT NULL | 性别 |
+| title | VARCHAR(20) | NOT NULL | 职称 |
 | phone | VARCHAR(20) | NULLABLE | 电话 |
 | department_id | BIGINT | FK → Department, NOT NULL | 所属科室 |
 
@@ -139,7 +139,7 @@
 | id | BIGINT | PK, AUTO_INCREMENT | 病人ID |
 | patient_no | VARCHAR(20) | UNIQUE, NOT NULL | 病案号 |
 | name | VARCHAR(50) | NOT NULL | 姓名 |
-| gender | ENUM('M','F') | NOT NULL | 性别 |
+| gender | VARCHAR(20) | NOT NULL | 性别 |
 | birth_date | DATE | NULLABLE | 出生日期 |
 | address | VARCHAR(200) | NULLABLE | 地址 |
 | phone | VARCHAR(20) | NULLABLE | 电话 |
@@ -160,7 +160,7 @@
 | 属性 | 类型 | 约束 | 说明 |
 |------|------|------|------|
 | id | BIGINT | PK, AUTO_INCREMENT | ID |
-| title | ENUM('RESIDENT','ATTENDING','VICE_CHIEF','CHIEF') | UNIQUE, NOT NULL | 职称 |
+| title | VARCHAR(20) | UNIQUE, NOT NULL | 职称 |
 | consultation_fee | DECIMAL(10,2) | NOT NULL, CHECK(>=0) | 诊疗费 |
 
 ### 3.2 住院基础
@@ -182,7 +182,7 @@
 | id | BIGINT | PK, AUTO_INCREMENT | 病床ID |
 | ward_id | BIGINT | FK → Ward, NOT NULL | 所属病房 |
 | bed_no | VARCHAR(10) | NOT NULL | 床位号 |
-| status | ENUM('AVAILABLE','OCCUPIED') | DEFAULT 'AVAILABLE' | 状态 |
+| status | VARCHAR(20) | DEFAULT 'AVAILABLE' | 状态 |
 | — | — | UNIQUE(ward_id, bed_no) | 同病房床位号唯一 |
 
 ### 3.3 门诊业务层
@@ -194,8 +194,8 @@
 | id | BIGINT | PK, AUTO_INCREMENT | 排班ID |
 | doctor_id | BIGINT | FK → Doctor, NOT NULL | 医生 |
 | schedule_date | DATE | NOT NULL | 排班日期 |
-| time_slot | ENUM('MORNING','AFTERNOON','EVENING') | NOT NULL | 时段 |
-| schedule_type | ENUM('OUTPATIENT','INPATIENT_ROUND') | NOT NULL | 排班类型 |
+| time_slot | VARCHAR(20) | NOT NULL | 时段 |
+| schedule_type | VARCHAR(20) | NOT NULL | 排班类型 |
 | — | — | UNIQUE(doctor_id, schedule_date, time_slot) | 同一医生同一时段唯一 |
 
 #### Registration（挂号表）
@@ -206,9 +206,9 @@
 | patient_id | BIGINT | FK → Patient, NOT NULL | 病人 |
 | doctor_id | BIGINT | FK → Doctor, NOT NULL | 挂号医生 |
 | registration_date | DATE | NOT NULL | 挂号日期 |
-| time_slot | ENUM('MORNING','AFTERNOON','EVENING') | NOT NULL | 时段 |
-| visit_type | ENUM('FIRST_VISIT','REVISIT') | NOT NULL, DEFAULT 'FIRST_VISIT' | 就诊类型：初诊/复诊 |
-| status | ENUM('PENDING_PAYMENT','WAITING','VISITED','CANCELLED') | DEFAULT 'PENDING_PAYMENT' | 状态 |
+| time_slot | VARCHAR(20) | NOT NULL | 时段 |
+| visit_type | VARCHAR(20) | NOT NULL, DEFAULT 'FIRST_VISIT' | 就诊类型：初诊/复诊 |
+| status | VARCHAR(20) | DEFAULT 'PENDING_PAYMENT' | 状态 |
 
 #### OutpatientVisit（就诊记录表）
 
@@ -249,12 +249,12 @@
 |------|------|------|------|
 | id | BIGINT | PK, AUTO_INCREMENT | 缴费ID |
 | patient_id | BIGINT | FK → Patient, NOT NULL | 病人 |
-| type | ENUM('REGISTRATION','CONSULTATION','DRUG') | NOT NULL | 费用类型 |
+| type | VARCHAR(20) | NOT NULL | 费用类型 |
 | reference_id | BIGINT | NOT NULL | 关联ID |
 | amount | DECIMAL(10,2) | NOT NULL | 金额 |
-| status | ENUM('UNPAID','PAID') | DEFAULT 'UNPAID' | 状态 |
+| status | VARCHAR(20) | DEFAULT 'UNPAID' | 状态 |
 | pay_time | DATETIME | NULLABLE | 缴费时间 |
-| pay_method | ENUM('ALIPAY','WECHAT','CARD') | NULLABLE | 支付方式 |
+| pay_method | VARCHAR(20) | NULLABLE | 支付方式 |
 
 ### 3.4 住院业务层
 
@@ -270,7 +270,7 @@
 | bed_id | BIGINT | FK → Bed, NOT NULL | 病床 |
 | admission_date | DATE | NOT NULL | 入院时间 |
 | discharge_date | DATE | NULLABLE | 出院时间 |
-| status | ENUM('IN_HOSPITAL','DISCHARGED') | DEFAULT 'IN_HOSPITAL' | 状态 |
+| status | VARCHAR(20) | DEFAULT 'IN_HOSPITAL' | 状态 |
 
 #### HospitalizationRecord（住院记录 / 每日查房）
 
@@ -341,8 +341,9 @@ CREATE TABLE `user` (
     `id`           BIGINT PRIMARY KEY AUTO_INCREMENT,
     `username`     VARCHAR(50) NOT NULL UNIQUE,
     `password`     VARCHAR(255) NOT NULL,
-    `role`         ENUM('ADMIN','DOCTOR','PATIENT') NOT NULL,
-    `reference_id` BIGINT NULL
+    `role`         VARCHAR(20) NOT NULL,
+    `reference_id` BIGINT NULL,
+    CONSTRAINT chk_user_role CHECK (role IN ('ADMIN','DOCTOR','PATIENT'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `department` (
@@ -355,21 +356,24 @@ CREATE TABLE `doctor` (
     `id`            BIGINT PRIMARY KEY AUTO_INCREMENT,
     `doctor_no`     VARCHAR(20) NOT NULL UNIQUE,
     `name`          VARCHAR(50) NOT NULL,
-    `gender`        ENUM('M','F') NOT NULL,
-    `title`         ENUM('RESIDENT','ATTENDING','VICE_CHIEF','CHIEF') NOT NULL,
+    `gender`        VARCHAR(20) NOT NULL,
+    `title`         VARCHAR(20) NOT NULL,
     `phone`         VARCHAR(20) NULL,
     `department_id` BIGINT NOT NULL,
-    FOREIGN KEY (`department_id`) REFERENCES `department`(`id`)
+    FOREIGN KEY (`department_id`) REFERENCES `department`(`id`),
+    CONSTRAINT chk_doctor_gender CHECK (gender IN ('M','F')),
+    CONSTRAINT chk_doctor_title CHECK (title IN ('RESIDENT','ATTENDING','VICE_CHIEF','CHIEF'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `patient` (
     `id`         BIGINT PRIMARY KEY AUTO_INCREMENT,
     `patient_no` VARCHAR(20) NOT NULL UNIQUE,
     `name`       VARCHAR(50) NOT NULL,
-    `gender`     ENUM('M','F') NOT NULL,
+    `gender`     VARCHAR(20) NOT NULL,
     `birth_date` DATE NULL,
     `address`    VARCHAR(200) NULL,
-    `phone`      VARCHAR(20) NULL
+    `phone`      VARCHAR(20) NULL,
+    CONSTRAINT chk_patient_gender CHECK (gender IN ('M','F'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `drug` (
@@ -383,8 +387,9 @@ CREATE TABLE `drug` (
 
 CREATE TABLE `doctor_fee` (
     `id`               BIGINT PRIMARY KEY AUTO_INCREMENT,
-    `title`            ENUM('RESIDENT','ATTENDING','VICE_CHIEF','CHIEF') NOT NULL UNIQUE,
-    `consultation_fee` DECIMAL(10,2) NOT NULL CHECK (`consultation_fee` >= 0)
+    `title`            VARCHAR(20) NOT NULL UNIQUE,
+    `consultation_fee` DECIMAL(10,2) NOT NULL CHECK (`consultation_fee` >= 0),
+    CONSTRAINT chk_doctor_fee_title CHECK (title IN ('RESIDENT','ATTENDING','VICE_CHIEF','CHIEF'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================================
@@ -404,9 +409,10 @@ CREATE TABLE `bed` (
     `id`      BIGINT PRIMARY KEY AUTO_INCREMENT,
     `ward_id` BIGINT NOT NULL,
     `bed_no`  VARCHAR(10) NOT NULL,
-    `status`  ENUM('AVAILABLE','OCCUPIED') DEFAULT 'AVAILABLE',
+    `status`  VARCHAR(20) DEFAULT 'AVAILABLE',
     UNIQUE (`ward_id`, `bed_no`),
-    FOREIGN KEY (`ward_id`) REFERENCES `ward`(`id`)
+    FOREIGN KEY (`ward_id`) REFERENCES `ward`(`id`),
+    CONSTRAINT chk_bed_status CHECK (status IN ('AVAILABLE','OCCUPIED'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================================
@@ -417,10 +423,12 @@ CREATE TABLE `schedule` (
     `id`            BIGINT PRIMARY KEY AUTO_INCREMENT,
     `doctor_id`     BIGINT NOT NULL,
     `schedule_date` DATE NOT NULL,
-    `time_slot`     ENUM('MORNING','AFTERNOON','EVENING') NOT NULL,
-    `schedule_type` ENUM('OUTPATIENT','INPATIENT_ROUND') NOT NULL,
+    `time_slot`     VARCHAR(20) NOT NULL,
+    `schedule_type` VARCHAR(20) NOT NULL,
     UNIQUE (`doctor_id`, `schedule_date`, `time_slot`),
-    FOREIGN KEY (`doctor_id`) REFERENCES `doctor`(`id`)
+    FOREIGN KEY (`doctor_id`) REFERENCES `doctor`(`id`),
+    CONSTRAINT chk_schedule_time_slot CHECK (time_slot IN ('MORNING','AFTERNOON','EVENING')),
+    CONSTRAINT chk_schedule_type CHECK (schedule_type IN ('OUTPATIENT','INPATIENT_ROUND'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `registration` (
@@ -428,11 +436,14 @@ CREATE TABLE `registration` (
     `patient_id`       BIGINT NOT NULL,
     `doctor_id`        BIGINT NOT NULL,
     `registration_date` DATE NOT NULL,
-    `time_slot`        ENUM('MORNING','AFTERNOON','EVENING') NOT NULL,
-    `visit_type`       ENUM('FIRST_VISIT','REVISIT') NOT NULL DEFAULT 'FIRST_VISIT',
-    `status`           ENUM('PENDING_PAYMENT','WAITING','VISITED','CANCELLED') DEFAULT 'PENDING_PAYMENT',
+    `time_slot`        VARCHAR(20) NOT NULL,
+    `visit_type`       VARCHAR(20) NOT NULL DEFAULT 'FIRST_VISIT',
+    `status`           VARCHAR(20) DEFAULT 'PENDING_PAYMENT',
     FOREIGN KEY (`patient_id`) REFERENCES `patient`(`id`),
-    FOREIGN KEY (`doctor_id`) REFERENCES `doctor`(`id`)
+    FOREIGN KEY (`doctor_id`) REFERENCES `doctor`(`id`),
+    CONSTRAINT chk_registration_time_slot CHECK (time_slot IN ('MORNING','AFTERNOON','EVENING')),
+    CONSTRAINT chk_registration_visit_type CHECK (visit_type IN ('FIRST_VISIT','REVISIT')),
+    CONSTRAINT chk_registration_status CHECK (status IN ('PENDING_PAYMENT','WAITING','VISITED','CANCELLED'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `outpatient_visit` (
@@ -471,13 +482,16 @@ CREATE TABLE `prescription_item` (
 CREATE TABLE `payment` (
     `id`          BIGINT PRIMARY KEY AUTO_INCREMENT,
     `patient_id`  BIGINT NOT NULL,
-    `type`        ENUM('REGISTRATION','CONSULTATION','DRUG') NOT NULL,
+    `type`        VARCHAR(20) NOT NULL,
     `reference_id` BIGINT NOT NULL,
     `amount`      DECIMAL(10,2) NOT NULL,
-    `status`      ENUM('UNPAID','PAID') DEFAULT 'UNPAID',
+    `status`      VARCHAR(20) DEFAULT 'UNPAID',
     `pay_time`    DATETIME NULL,
-    `pay_method`  ENUM('ALIPAY','WECHAT','CARD') NULL,
-    FOREIGN KEY (`patient_id`) REFERENCES `patient`(`id`)
+    `pay_method`  VARCHAR(20) NULL,
+    FOREIGN KEY (`patient_id`) REFERENCES `patient`(`id`),
+    CONSTRAINT chk_payment_type CHECK (type IN ('REGISTRATION','CONSULTATION','DRUG')),
+    CONSTRAINT chk_payment_status CHECK (status IN ('UNPAID','PAID')),
+    CONSTRAINT chk_payment_pay_method CHECK (pay_method IN ('ALIPAY','WECHAT','CARD'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================================
@@ -493,11 +507,12 @@ CREATE TABLE `hospitalization` (
     `bed_id`              BIGINT NOT NULL,
     `admission_date`      DATE NOT NULL,
     `discharge_date`      DATE NULL,
-    `status`              ENUM('IN_HOSPITAL','DISCHARGED') DEFAULT 'IN_HOSPITAL',
+    `status`              VARCHAR(20) DEFAULT 'IN_HOSPITAL',
     FOREIGN KEY (`patient_id`) REFERENCES `patient`(`id`),
     FOREIGN KEY (`attending_doctor_id`) REFERENCES `doctor`(`id`),
     FOREIGN KEY (`ward_id`) REFERENCES `ward`(`id`),
-    FOREIGN KEY (`bed_id`) REFERENCES `bed`(`id`)
+    FOREIGN KEY (`bed_id`) REFERENCES `bed`(`id`),
+    CONSTRAINT chk_hospitalization_status CHECK (status IN ('IN_HOSPITAL','DISCHARGED'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `hospitalization_record` (
@@ -744,7 +759,7 @@ SELECT
 FROM `schedule` s
 JOIN `doctor` doc ON s.`doctor_id` = doc.`id`
 JOIN `department` d ON doc.`department_id` = d.`id`
-ORDER BY d.`name`, s.`schedule_date`, s.`time_slot`;
+ORDER BY d.`name`, s.`schedule_date`, FIELD(s.`time_slot`, 'MORNING', 'AFTERNOON', 'EVENING');
 ```
 
 #### 医生工作量统计
